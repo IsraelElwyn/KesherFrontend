@@ -1,0 +1,244 @@
+import React, { useState } from "react";
+import {
+    Text,
+    View,
+    TextInput,
+    StyleSheet,
+    TouchableOpacity,
+    Switch,
+} from "react-native";
+import globalStyles from "../../assets/globalStyles";
+import Icons from "../../assets/icons/icons";
+import { Controller } from "react-hook-form";
+import DateTimePickerModal from "react-native-modal-datetime-picker";
+import NewEventIcon from "../../assets/icons/newEventIcon";
+import { useTranslation } from "react-i18next";
+
+export default function AddEventForm({ control, errors, title }: any) {
+    const { t } = useTranslation();
+    const [isStartDatePickerVisible, setStartDatePickerVisibility] =
+        useState(false);
+    const [isEndDatePickerVisible, setEndDatePickerVisibility] =
+        useState(false);
+    const [isFullDay, setIsFullDay] = useState(true);
+    const toggleSwitch = () => setIsFullDay((previousState) => !previousState);
+
+    return (
+        <View>
+            <View style={styles.titleView}>
+                <NewEventIcon />
+
+                <Text style={styles.title}>{title}</Text>
+            </View>
+            <View style={styles.box}>
+                <Controller
+                    control={control}
+                    rules={{
+                        required: true,
+                        maxLength: 100,
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            style={[styles.text, styles.divider]}
+                            placeholderTextColor="#C4C4C6"
+                            placeholder={t("Event Title")}
+                            onChangeText={onChange}
+                            value={value}
+                        />
+                    )}
+                    name="title"
+                    defaultValue=""
+                />
+
+                <Controller
+                    control={control}
+                    rules={{
+                        maxLength: 500,
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                        <TextInput
+                            style={[styles.text, styles.divider]}
+                            placeholderTextColor="#C4C4C6"
+                            placeholder={t("Description")}
+                            onChangeText={onChange}
+                            value={value}
+                            multiline
+                        />
+                    )}
+                    name="details"
+                    defaultValue=""
+                />
+
+                <View style={[styles.setTime, styles.divider]}>
+                    <Text style={styles.text}>{t("Full Day")}</Text>
+                    <Switch
+                        trackColor={{
+                            false: "#767577",
+                            true: globalStyles.color.mediumPurplel,
+                        }}
+                        thumbColor="#f4f3f4"
+                        ios_backgroundColor="#3e3e3e"
+                        onValueChange={toggleSwitch}
+                        value={isFullDay}
+                    />
+                </View>
+
+                <Controller
+                    control={control}
+                    rules={{
+                        required: true,
+                    }}
+                    render={({ field: { onChange, value } }) => (
+                        <View>
+                            <TouchableOpacity
+                                onPress={() =>
+                                    setStartDatePickerVisibility(true)
+                                }
+                                style={styles.setTime}
+                            >
+                                <Text style={styles.text}>{t("Start")}</Text>
+                                {value && (
+                                    <Text style={styles.text}>
+                                        {value.toLocaleDateString()}
+                                        {"     "}
+                                        {value
+                                            .toLocaleTimeString()
+                                            .substring(0, 5)}
+                                    </Text>
+                                )}
+                            </TouchableOpacity>
+                            <DateTimePickerModal
+                                isVisible={isStartDatePickerVisible}
+                                mode={isFullDay ? "date" : "datetime"}
+                                date={value}
+                                cancelTextIOS={t("Cancel")}
+                                confirmTextIOS={t("Confirm")}
+                                minimumDate={new Date()}
+                                onConfirm={(date) => {
+                                    setStartDatePickerVisibility(false);
+                                    onChange(date);
+                                }}
+                                onCancel={() =>
+                                    setStartDatePickerVisibility(false)
+                                }
+                            />
+                        </View>
+                    )}
+                    name="startTime"
+                />
+                {!isFullDay && (
+                    <Controller
+                        control={control}
+                        rules={{
+                            required: true,
+                        }}
+                        render={({ field: { onChange, value } }) => (
+                            <View>
+                                <TouchableOpacity
+                                    onPress={() =>
+                                        setEndDatePickerVisibility(true)
+                                    }
+                                    style={styles.setTime}
+                                >
+                                    <Text style={styles.text}>{t("End")}</Text>
+                                    {value && (
+                                        <Text style={styles.text}>
+                                            {value.toLocaleDateString()}
+                                            {"     "}
+                                            {value
+                                                .toLocaleTimeString()
+                                                .substring(0, 5)}
+                                        </Text>
+                                    )}
+                                </TouchableOpacity>
+                                <DateTimePickerModal
+                                    isVisible={isEndDatePickerVisible}
+                                    mode="datetime"
+                                    date={value}
+                                    cancelTextIOS={t("Cancel")}
+                                    confirmTextIOS={t("Confirm")}
+                                    minimumDate={new Date()}
+                                    onConfirm={(date) => {
+                                        setEndDatePickerVisibility(false);
+                                        onChange(date);
+                                    }}
+                                    onCancel={() =>
+                                        setEndDatePickerVisibility(false)
+                                    }
+                                />
+                            </View>
+                        )}
+                        name="endTime"
+                    />
+                )}
+            </View>
+
+            {errors.title && (
+                <Text style={styles.errorText}>{t("Invalid Title")}</Text>
+            )}
+            {errors.details && (
+                <Text style={styles.errorText}>{t("Invalid Details")}</Text>
+            )}
+            {errors.startTime && (
+                <Text style={styles.errorText}>{t("Invalid Start Time")}</Text>
+            )}
+            {errors.endTime && (
+                <Text style={styles.errorText}>{t("Invalid End Time")}</Text>
+            )}
+        </View>
+    );
+}
+
+const styles = StyleSheet.create({
+    titleView: {
+        alignSelf: "flex-end",
+        marginBottom: 10,
+        marginHorizontal: "5%",
+        alignItems: "center",
+    },
+    title: {
+        color: globalStyles.color.text,
+        fontFamily: globalStyles.font.semiBold,
+        fontSize: 20,
+        lineHeight: 24,
+        letterSpacing: 0.1,
+        textAlign: "right",
+        alignItems: "center",
+        display: "flex",
+        paddingTop: 15,
+    },
+    box: {
+        borderWidth: 1,
+        borderColor: "#C4C4C6",
+        borderRadius: 12,
+    },
+    text: {
+        fontFamily: globalStyles.font.regular,
+        fontSize: 16,
+        lineHeight: 24,
+        letterSpacing: 0.1,
+        textAlign: "right",
+        alignItems: "center",
+        display: "flex",
+        color: globalStyles.color.text,
+        padding: 8,
+    },
+    errorText: {
+        fontFamily: globalStyles.font.regular,
+        fontSize: 16,
+        lineHeight: 24,
+        letterSpacing: 0.1,
+        textAlign: "right",
+        alignItems: "center",
+        display: "flex",
+        marginRight: "5%",
+        color: globalStyles.color.text,
+    },
+    divider: {
+        borderBottomWidth: 1,
+        borderBottomColor: "#C4C4C6",
+    },
+    setTime: {
+        flexDirection: "row-reverse",
+    },
+});
